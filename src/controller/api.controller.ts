@@ -15,7 +15,7 @@ export class APIController {
   async getUser(@Query('uid') uid) {
     const user = await this.userService.getUser({ uid });
     return { success: true, message: 'OK', data: user };
-  }sf
+  }
 
   @Get('/hello')
   async getHello() {
@@ -32,17 +32,58 @@ export class TaskController {
 
   @Get("/getUsrTaskList")
   async getUsrTaskList() {
-    return await fs.promises.readFile("data/usrTask.json");
+    return await fs.promises.readFile("data/savedUsrData/usrTask.json");
   }
 
   @Post("/save")
   async saveTask(@Body() form: {
-    todo: string[];
-    undergoing: string[];
-    done: string[];
+    taskList: {
+      todo: string[];
+      undergoing: string[];
+      done: string[];
+    };
+    usrName: string;
+  }){
+    await fs.promises.writeFile(`data/savedUsrData/${form.usrName}.json`, JSON.stringify(form.taskList, null, 2), "utf-8");
+    return { success: true, message: 'OK', data: form };
+  }
+
+}
+
+@Controller("accounts")
+export class AccountController {
+  currentUsrName: string;
+
+  @Post("/create")
+  async createAccount(@Body() form: {
+    usrName: string;
+    password: string;
+  }) {
+    this.currentUsrName = form.usrName;
+
+    let table = JSON.parse(await fs.promises.readFile('data/usr-password.json', 'utf-8'));
+
+    table[form.usrName] = form.password;
+    console.log(table);
+
+    await fs.promises.writeFile("data/usr-password.json", JSON.stringify(table, null, 2));
+
+    let initialTaskList = await fs.promises.readFile("data/initialTaskList.json");
+    await fs.promises.writeFile(`data/savedUsrData/${form.usrName}.json`, initialTaskList);
+    return initialTaskList;
+  }
+
+  @Post("/login")
+  async login(@Body() form: {
+    usrName: string;
+    password: string;
   }){
     console.log(form);
-    await fs.promises.writeFile("data/usrTask.json", JSON.stringify(form, null, 2), "utf-8");
-    return { success: true, message: 'OK', data: form };
+
+    let table = JSON.parse(await fs.promises.readFile('data/usr-password.json', 'utf-8'));
+    if(table[form.usrName] == form.password){
+      let taskList = JSON.parse(await fs.promises.readFile(`data/savedUsrData/${form.usrName}.json`, 'utf-8'));
+      return {message: "success", taskList: taskList};
+    } else return {message: "fail", taskList: {}};
   }
 }
