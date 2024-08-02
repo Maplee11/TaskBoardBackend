@@ -2,6 +2,7 @@ import {Body, Controller, Get, Inject, Post, Query} from '@midwayjs/core';
 import {Context} from '@midwayjs/koa';
 import {UserService} from '../service/user.service';
 import * as fs from "node:fs";
+import * as path from "node:path";
 
 @Controller('/api')
 export class APIController {
@@ -43,8 +44,10 @@ export class TaskController {
       done: string[];
     };
     usrName: string;
+    projectName: string;
   }){
-    await fs.promises.writeFile(`data/savedUsrData/${form.usrName}.json`, JSON.stringify(form.taskList, null, 2), "utf-8");
+    console.log(form);
+    await fs.promises.writeFile(`data/savedUsrData/${form.usrName}/${form.projectName}/${form.usrName}.json`, JSON.stringify(form.taskList, null, 2), "utf-8");
     return { success: true, message: 'OK', data: form };
   }
 
@@ -68,8 +71,14 @@ export class AccountController {
 
     await fs.promises.writeFile("data/usr-password.json", JSON.stringify(table, null, 2));
 
+    let tarDirName = path.join("data/savedUsrData", form.usrName);
+    fs.mkdirSync(tarDirName, { recursive: true });
+    tarDirName = path.join(tarDirName, "示例项目");
+    fs.mkdirSync(tarDirName, { recursive: true });
+    fs.mkdirSync(path.join(tarDirName, "attachments"), { recursive: true });
+
     let initialTaskList = await fs.promises.readFile("data/initialTaskList.json");
-    await fs.promises.writeFile(`data/savedUsrData/${form.usrName}.json`, initialTaskList);
+    await fs.promises.writeFile(`data/savedUsrData/${form.usrName}/示例项目/${form.usrName}.json`, initialTaskList);
     return initialTaskList;
   }
 
@@ -82,8 +91,35 @@ export class AccountController {
 
     let table = JSON.parse(await fs.promises.readFile('data/usr-password.json', 'utf-8'));
     if(table[form.usrName] == form.password){
-      let taskList = JSON.parse(await fs.promises.readFile(`data/savedUsrData/${form.usrName}.json`, 'utf-8'));
+      let taskList = JSON.parse(await fs.promises.readFile(`data/savedUsrData/${form.usrName}/示例项目/${form.usrName}.json`, 'utf-8'));
       return {message: "success", taskList: taskList};
     } else return {message: "fail", taskList: {}};
+  }
+}
+
+@Controller("project")
+export class ProjectController {
+  @Post("/create")
+  async createProject(@Body() form: {
+    usrName: string;
+    projectName: string;
+  }) {
+    let dir = path.join("data/savedUsrData", form.usrName);
+    fs.mkdirSync(path.join(dir, form.projectName), { recursive: true });
+    fs.mkdirSync(path.join(dir, form.projectName, "attachments"), { recursive: true });
+
+    let initialTaskList = await fs.promises.readFile("data/emptyTaskList.json");
+
+    await fs.promises.writeFile(path.join(dir, form.projectName, `${form.usrName}.json`), initialTaskList, "utf-8");
+  }
+
+  @Post("/load")
+  async loadProject(@Body() form: {
+    usrName: string;
+    projectName: string;
+  }) {
+    console.log(form);
+    let projectDir = path.join("data/savedUsrData", form.usrName, form.projectName, `${form.usrName}.json`);
+    return await fs.promises.readFile(projectDir);
   }
 }
