@@ -51,6 +51,37 @@ export class TaskController {
     return { success: true, message: 'OK', data: form };
   }
 
+  @Post("/addComment")
+  async addComment(@Body() form: {
+    usrName: string;
+    projectName: string;
+    taskName: string;
+    comment: string;
+  }) {
+    const dicPath = path.join("data/savedUsrData", form.usrName, form.projectName, "comments.json");
+
+    let commentDic = fs.existsSync(dicPath) ? JSON.parse(fs.readFileSync(dicPath, 'utf-8')) : {};
+    if(form.taskName in commentDic) {
+      commentDic[form.taskName].push(form.comment);
+    } else {
+      commentDic[form.taskName] = [form.comment];
+    }
+
+    fs.writeFileSync(dicPath, JSON.stringify(commentDic, null, 2));
+  }
+
+  @Post("/getCommentList")
+  async getCommentList(@Body() form: {
+    usrName: string;
+    projectName: string;
+    taskName: string;
+  }) {
+    const dicPath = path.join("data/savedUsrData", form.usrName, form.projectName, "comments.json");
+    let commentDic = fs.existsSync(dicPath) ? JSON.parse(fs.readFileSync(dicPath, 'utf-8')) : {};
+    if(form.taskName in commentDic) {
+      return commentDic[form.taskName];
+    } else return [];
+  }
 }
 
 @Controller("accounts")
@@ -67,7 +98,6 @@ export class AccountController {
     let table = JSON.parse(await fs.promises.readFile('data/usr-password.json', 'utf-8'));
 
     table[form.usrName] = form.password;
-    console.log(table);
 
     await fs.promises.writeFile("data/usr-password.json", JSON.stringify(table, null, 2));
 
