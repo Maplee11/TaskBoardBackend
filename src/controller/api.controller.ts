@@ -122,4 +122,22 @@ export class ProjectController {
     let projectDir = path.join("data/savedUsrData", form.usrName, form.projectName, `${form.usrName}.json`);
     return await fs.promises.readFile(projectDir);
   }
+
+  @Post("/download")
+  async downloadProjectList(@Body() form: {
+    usrName: string;
+  }) {
+    const directoryPath = path.join("data/savedUsrData", form.usrName);
+    const files = fs.readdirSync(directoryPath);
+    let projectList = [];
+
+    files.forEach(file => {
+      const filePath = path.join(directoryPath, file);
+      if (fs.statSync(filePath).isDirectory()) {
+        projectList.push(file);
+      }
+    });
+
+    return projectList;
+  }
 }
