@@ -82,6 +82,12 @@ export class TaskController {
       return commentDic[form.taskName];
     } else return [];
   }
+
+  // @Post("/uploadAttachment")
+  // async saveAttachment(ctx: Context) {
+  //   console.log(ctx.request.files.file);
+  //   return;
+  // }
 }
 
 @Controller("accounts")
@@ -169,5 +175,26 @@ export class ProjectController {
     });
 
     return projectList;
+  }
+}
+
+@Controller('upload')
+export class UploadController {
+  @Post('/')
+  async upload(@Body() form: { usrName: string; projectName: string; taskName: string;}) {
+    // console.log(this.ctx);
+    console.log(form);
+    // const file = ctx.request.body.file;
+    // console.log(file.name);
+    // const filePath = path.join(__dirname, '../uploads', file.name);
+    //
+    // const reader = fs.createReadStream(file.path);
+    // const stream = fs.createWriteStream(filePath);
+    // reader.pipe(stream);
+
+    // ctx.body = {
+    //   message: '文件上传成功',
+    //   filePath: `/uploads/${file.name}`
+    // };
   }
 }

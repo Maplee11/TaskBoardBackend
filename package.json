@@ -12,6 +12,7 @@
     "@midwayjs/koa": "^3.12.0",
     "@midwayjs/logger": "^3.1.0",
     "@midwayjs/validate": "^3.12.0",
+    "docker": "^1.0.0",
     "fs-extra": "^11.2.0"
   },
   "devDependencies": {
@@ -43,5 +44,15 @@
     "url": ""
   },
   "author": "anonymous",
-  "license": "MIT"
+  "license": "MIT",
+  "bin": "bootstrap.js",
+  "pkg": {
+    "scripts": [
+      "bootstrap.js",
+      "src/**/*.js"
+    ],
+    "assets": [
+      "public/**/*"
+    ]
+  }
 }
